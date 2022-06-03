@@ -3,8 +3,9 @@
   <div class="home">
     <h1>Pokedéx</h1>
     <div class="submit">
-      <TextInput v-model="valor" @keyup.enter="pesquisar()" />
-      <Button name="Search Pokemon" @click="pesquisar()" />
+      <TextInput v-model="valor" @keyup.enter="pesquisar()" @keyup.capture="listaPokemon()"  list="nomePokemon"/>
+      <datalist id="nomePokemon"></datalist>
+      <Button name="Procurar Pokemon" @click="pesquisar()"></button>
     </div>
     <div v-show="img" class="pokemonContainer">
       <img :src="img" alt="" class="pokemonImage" />
@@ -22,12 +23,7 @@
         <div>
           <div class="pokemonDataTable" v-show="ability">
             <p class="dataTitle">Skills:</p>
-            <p
-              class="pokemonData"
-              v-for="(ab, key) in ability"
-              :key="key"
-              v-show="ability"
-            >
+            <p class="pokemonData" v-for="(ab, key) in ability" :key="key" v-show="ability">
               {{ ab.name }}
             </p>
           </div>
@@ -49,11 +45,7 @@
           </div>
         </div>
         <div class="pokemonStatsTableValue">
-          <div
-            class="pokemonData"
-            v-for="(value, key) in statsValue"
-            :key="key"
-          >
+          <div class="pokemonData" v-for="(value, key) in statsValue" :key="key">
             {{ value.base_stat }}
           </div>
         </div>
@@ -87,6 +79,7 @@ export default {
   },
   methods: {
     async pesquisar() {
+      document.querySelector('#nomePokemon').innerHTML = ''
       const reqPokemon = await fetch(
         `https://pokeapi.co/api/v2/pokemon/${this.valor.toLowerCase()}`
       );
@@ -107,12 +100,37 @@ export default {
       this.statsValue = resPokemon.stats.map((value) => value);
       this.statsName = resPokemon.stats.map((value) => value.stat);
     },
+    async listaPokemon() {
+      if (window.localStorage.getItem("pokemons") == null) {
+        const reqPokemon = await fetch(
+          `https://pokeapi.co/api/v2/pokemon?limit=1126`
+        );
+        const resPokemon = await reqPokemon.json();
+        const nomePokemon = resPokemon.results.map((value) => value.name);
+        window.localStorage.setItem("pokemons", JSON.stringify(nomePokemon));
+      }
+      if (this.valor.length >= 3) {
+        const pokemons = JSON.parse(window.localStorage.getItem("pokemons")).filter(value=>{
+          return value.toLowerCase().includes(this.valor.toLowerCase())
+        })
+        console.log(pokemons)
+        const pokemonList = document.querySelector('#nomePokemon')
+        pokemonList.innerHTML = ''
+        pokemons.forEach(value=>{
+          const option = document.createElement('option')
+          option.value = value
+          pokemonList.appendChild(option)
+        })
+      }else{
+        document.querySelector('#nomePokemon').innerHTML = ''
+      }
+    }
   },
-  mounted() {},
+  mounted() { },
   components: {
     Button,
-    TextInput,
-  },
+    TextInput
+},
 };
 </script>
 
@@ -121,11 +139,13 @@ export default {
   margin: 0;
   padding: 0;
 }
+
 .pokemonAllStats {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
 }
+
 .pokemonStats2 {
   display: flex;
   flex-direction: row;
@@ -133,6 +153,7 @@ export default {
   width: 280px;
   margin: 0 auto;
 }
+
 .pokemonStats {
   display: flex;
   flex-direction: column;
@@ -140,6 +161,7 @@ export default {
   width: 280px;
   margin: 0 auto;
 }
+
 .pokemonStats p {
   margin: 5px;
 }
@@ -147,6 +169,7 @@ export default {
 .pokemonDataTable {
   display: flex;
 }
+
 .submit {
   display: flex;
   justify-content: center;
@@ -155,18 +178,22 @@ export default {
   align-items: center;
   margin: 2px auto;
 }
+
 .pokemonData {
   text-transform: capitalize;
 }
+
 .subTitle {
   color: v-bind("bgColor");
   font-weight: bold;
 }
+
 .dataTitle {
   font-weight: bold;
   display: flex;
   text-transform: capitalize;
 }
+
 .pokemonProfile {
   display: flex;
   flex-direction: column;
@@ -177,9 +204,11 @@ export default {
   font-size: 14px;
   color: black;
 }
+
 .pokemonName {
   font-size: 24px;
 }
+
 .home {
   min-height: 150px;
   border-style: solid;
@@ -188,6 +217,7 @@ export default {
   background-color: white;
   background-image: linear-gradient(var(--9ea40744-bgColor) 10%, white 80%);
 }
+
 .pokemonContainer {
   margin-top: 15px;
   display: flex;

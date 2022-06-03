@@ -1,5 +1,6 @@
 <template>
-  <input type="text" name="" id="" v-model="valor" />
+  <input type="text" name="" id="" v-model="valor"/>
+  
 </template>
 
 <script>
